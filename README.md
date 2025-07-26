@@ -1,5 +1,10 @@
 # bad_raycaster
 A little raycaster in webgl 2, the basis of 2.5 games like wolfestein 3d.
+
+### Tecnologies used
+- Webgl 2, used to display stuff onto the screen, essentially the same as opengl.
+- Typescript, pretty cool language, not my favourite, but better than js
+- Escript, pretty cool, super lightweight and easy to use, much better than Vite
 ### How to run
 **The site is online**, but if you want to run it locally, just
 ```bash
