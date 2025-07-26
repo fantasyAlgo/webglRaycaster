@@ -1,5 +1,7 @@
 # bad_raycaster
 A little raycaster in webgl 2, the basis of 2.5 games like wolfestein 3d.
+<img width="799" height="797" alt="Screenshot 2025-07-26 at 21 38 38" src="https://github.com/user-attachments/assets/6e74dc90-915b-47e4-9cb4-8491a032a0ef" />
+
 
 ### Tecnologies used
 - Webgl 2, used to display stuff onto the screen, essentially the same as opengl.
