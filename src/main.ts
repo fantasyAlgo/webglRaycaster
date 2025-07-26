@@ -1,6 +1,8 @@
 
-//import { vertexShaderSourceCode} from "./vertexShader";
-//import { fragmentShaderSourceCode} from "./fragmentShader";
+import { vertexShaderSourceCode} from "./vertexShader.ts";
+import { fragmentShaderSourceCode} from "./fragmentShader.ts";
+import { Player, Ray } from "./Player.ts";
+
 
 const N_GRID_LINES = 5;
 const N_RAYS = 500;
@@ -22,7 +24,7 @@ const map: number[][] = [
   [1, 0, 1, 0, 0, 0, 0, 0, 0, 1],
   [1, 0, 1, 0, 0, 0, 0, 0, 0, 1],
   [1, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+  [1, 0, 0, 0, 1, 0, 1, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 1, 1, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -35,47 +37,6 @@ let mapToPos = (x: number, y: number) => [(x-N_GRID_LINES)/N_GRID_LINES, (y-N_GR
 
 let double = (x: number) : [number, number] => [x, x];
 
-class Player {
-  size: number;
-  x: number;
-  y: number;
-  geometryListIndex: number;
-
-  dirX: number;
-  dirY: number;
-  angle: number;
-  constructor(x: number, y: number, size: number, geometryListIndex: number) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.geometryListIndex = geometryListIndex;
-    this.dirX = 0;
-    this.dirY = 1;
-    this.angle = Math.PI;
-  }
-  move(dx: number, dy: number) {
-    this.rotate(-dx);
-    if (dy == 0) return;
-    let front : {dx: number, dy: number};
-    front = dy > 0 ? {dx: this.dirY/100, dy: -this.dirX/100} : {dx: -this.dirY/100, dy: this.dirX/100};
-    this.x += front.dx;
-    this.y += front.dy;
-
-  }
-  rotate(angle: number) {
-    this.angle -= angle;
-    this.dirX = Math.cos(this.angle);
-    this.dirY = Math.sin(this.angle);
-  }
-}
-
-type Ray = {
-  x: number;
-  y: number;
-  distance: number;
-  angle: number;
-  side: number;
-};
 
 function rayCasting(player: Player, angle: number) {
   //console.log(player.angle, Math.PI/2 + player.angle, Math.tan(player.angle), Math.tan(Math.PI/2 + player.angle));
@@ -137,47 +98,6 @@ function multipleRayCasting(player: Player) : Ray[] {
 
 
 
-// Shaders
-
-
-const vertexShaderSourceCode = /*glsl*/ `#version 300 es
-  precision mediump float;
-
-  in vec2 vertexPosition;
-  in vec3 vertexColor;
-
-  out vec3 fragmentColor;
-
-  uniform vec2 canvasSize;
-  uniform vec2 shapeLocation;
-  uniform vec2 shapeSize;
-
-  uniform vec2 u_rotation;
-
-  void main() {
-    fragmentColor = vertexColor;
-    vec2 rotatedVertexPosition = vec2( vertexPosition.x * u_rotation.y + vertexPosition.y * u_rotation.x, 
-                                      vertexPosition.y * u_rotation.y - vertexPosition.x * u_rotation.x);
-
-    vec2 finalVertexPosition = rotatedVertexPosition * shapeSize + shapeLocation;
-    vec2 clipPosition = (finalVertexPosition / canvasSize) * 2.0 - 1.0;
-
-    gl_Position = vec4( finalVertexPosition + clipPosition/1000., 0.0, 1.0);
-  }
-`
-const fragmentShaderSourceCode =  /* glsl*/`#version 300 es
-  precision mediump float;
-
-  in vec3 fragmentColor;
-  out vec4 outputColor;
-
-  void main() {
-    outputColor = vec4(fragmentColor, 1.0);
-  }
-`
-
-
-
 
 
 /** Display an error message to the DOM, beneath the demo element */
@@ -212,12 +132,12 @@ const graySquareColors = new Uint8Array([
   45, 45, 45
 ]);
 const redSquareColors = new Uint8Array([
-  255, 0, 0,
-  255, 0, 0,
-  255, 0, 0,
-  255, 0, 0,
-  255, 0, 0,
-  255, 0, 0
+  160, 82, 45,
+  160, 82, 45,
+  160, 82, 45,
+  160, 82, 45,
+  160, 82, 45,
+  160, 82, 45
 ]);
 
 
@@ -340,6 +260,7 @@ function createProgram(
   return program;
 }
 
+
 function getContext(canvas: HTMLCanvasElement) {
   const gl = canvas.getContext('webgl2');
   if (!gl) {
@@ -353,6 +274,8 @@ function getContext(canvas: HTMLCanvasElement) {
 
   return gl;
 }
+
+
 function drawShape(gl: WebGL2RenderingContext, position : [number, number], size : [number, number], rotation : [number, number], geometry, 
                   shapeSizeUniform: WebGLUniformLocation, shapeLocationUniform: WebGLUniformLocation, rotationUniform: WebGLUniformLocation){
   gl.uniform2f(shapeSizeUniform, size[0], size[1]);
@@ -457,9 +380,9 @@ function movementAndColorDemo() {
     const ray = rayCasting(player, player.angle);
     const inverseRay = rayCasting(player, player.angle + Math.PI);
     // Updating player position
-    if (ray.distance/5 < player.size+0.01 || inverseRay.distance/5 < player.size+0.01)
-      player.move(dx, 0);
+    if (ray.distance/5 < player.size+0.01 || inverseRay.distance/5 < player.size+0.01) player.move(dx, 0);
     else player.move(dx, dy);
+
     if (!viewMode){
       if (div == 0){
         console.log(ray, map[ray.x][ray.y], ray.distance);
@@ -495,6 +418,9 @@ function movementAndColorDemo() {
         const height = DISTANCE_CONSTANT/(dist/5);
         drawShape(gl, [(-1+i/N_RAYS), 0], [2/(N_RAYS*2), height],
           [1, 0], geometryList[2], shapeSizeUniform, shapeLocationUniform, rotationUniform);
+        drawShape(gl, [(-1+i/N_RAYS), -1], [2/(N_RAYS*2), Math.max(1-height, 0)],
+          [1, 0], geometryList[1], shapeSizeUniform, shapeLocationUniform, rotationUniform);
+
       }
     }
     requestAnimationFrame(frame);
